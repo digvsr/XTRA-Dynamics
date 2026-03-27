@@ -1,505 +1,800 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>XTRA DYNAMICS</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --blue: #5be0ff;
-    --blue-dim: #1a6a88;
-    --red: #ff4466;
-    --red-dim: #7a1a2a;
-    --black: #000000;
-    --grid-color: rgba(91,224,255,0.18);
-    --grid-floor: rgba(255,255,255,0.13);
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  html, body {
-    width:100%; height:100%;
-    background: #000;
-    font-family: 'Share Tech Mono', monospace;
-    overflow: hidden;
-  }
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>XTRA DYNAMICS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Rajdhani:wght@300;600&display=swap" rel="stylesheet"/>
+  <style>
+/* ── XTR DYNAMICS v5 — XTRA DYNAMICS remaster ── */
+:root {
+  --cyan:    #00FFFF;
+  --fuchsia: #FF00FF;
+  --violet:  #9D00FF;
+  --vpale:   #E0AAFF;
+  --white:   #F0F0F0;
+  --neon-g:  #00FF88;
+  --red:     #FF2255;
+  --blue-wire: #5be0ff;
+}
 
-  /* SCENE */
-  .scene {
-    position:relative;
-    width:100vw; height:100vh;
-    display:flex; align-items:center; justify-content:center;
-    perspective: 900px;
-  }
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
 
-  /* FLOOR GRID */
-  .floor {
-    position:absolute;
-    bottom:0; left:-20%; width:140%; height:55%;
-    background:
-      linear-gradient(to right, var(--grid-floor) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--grid-floor) 1px, transparent 1px);
-    background-size: 60px 60px;
-    transform: rotateX(60deg);
-    transform-origin: bottom center;
-    mask-image: radial-gradient(ellipse 80% 60% at 50% 100%, white 40%, transparent 100%);
-    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 100%, white 40%, transparent 100%);
-    animation: floorPulse 4s ease-in-out infinite;
-  }
-  @keyframes floorPulse {
-    0%,100% { opacity:0.85; }
-    50% { opacity:1; }
-  }
+html, body {
+  width:100%; height:100%;
+  overflow:hidden;
+  background:#000;
+  font-family:'Orbitron', monospace;
+  cursor:none;
+}
 
-  /* MISSILE WRAPPER */
-  .missile-wrap {
-    position:relative;
-    width:200px; height:520px;
-    display:flex; flex-direction:column; align-items:center;
-    animation: float 5s ease-in-out infinite;
-    margin-bottom: 80px;
-    z-index:10;
-  }
-  @keyframes float {
-    0%,100% { transform: translateY(0px); }
-    50% { transform: translateY(-18px); }
-  }
+/* ── CURSOR ── */
+#cursor {
+  position:fixed;
+  width:10px; height:10px;
+  border-radius:50%;
+  background:var(--violet);
+  box-shadow:0 0 6px var(--violet),0 0 16px var(--violet),0 0 32px var(--fuchsia);
+  pointer-events:none;
+  z-index:9999;
+  transform:translate(-50%,-50%);
+  mix-blend-mode:screen;
+  transition:left 0.03s linear,top 0.03s linear;
+}
+#cursor-ring {
+  position:fixed;
+  width:26px; height:26px;
+  border-radius:50%;
+  border:1px solid var(--cyan);
+  box-shadow:0 0 8px var(--cyan);
+  pointer-events:none;
+  z-index:9998;
+  transform:translate(-50%,-50%);
+  opacity:0.5;
+  transition:left 0.10s ease,top 0.10s ease;
+}
 
-  /* --- SVG MISSILE --- */
-  .missile-svg {
-    position:absolute;
-    top:0; left:50%;
-    transform: translateX(-50%);
-    filter: drop-shadow(0 0 18px var(--blue)) drop-shadow(0 0 6px var(--blue));
-    animation: scanpulse 2.5s ease-in-out infinite;
-  }
-  @keyframes scanpulse {
-    0%,100% { filter: drop-shadow(0 0 18px #5be0ff) drop-shadow(0 0 6px #5be0ff); }
-    50% { filter: drop-shadow(0 0 32px #5be0ff) drop-shadow(0 0 12px #fff) drop-shadow(0 0 3px #ff4466); }
-  }
+/* ── STAGE ── */
+#stage {
+  position:fixed;
+  inset:0;
+  width:100vw; height:100vh;
+}
 
-  /* SCAN LINE on missile */
-  .scanline {
-    position:absolute;
-    left:50%; top:0;
-    transform:translateX(-50%);
-    width:90px; height:3px;
-    background: linear-gradient(to right, transparent, rgba(255,255,255,0.9), transparent);
-    border-radius:2px;
-    animation: scan 3s linear infinite;
-    z-index:20;
-    pointer-events:none;
-  }
-  @keyframes scan {
-    0% { top: 5%; opacity:0; }
-    10% { opacity:1; }
-    90% { opacity:1; }
-    100% { top: 90%; opacity:0; }
-  }
+#venom-canvas {
+  position:absolute;
+  inset:0; width:100%; height:100%;
+  z-index:0;
+}
 
-  /* GLOW blob behind missile */
-  .glow-blob {
-    position:absolute;
-    top:30%; left:50%;
-    transform: translate(-50%,-50%);
-    width:200px; height:400px;
-    background: radial-gradient(ellipse at center, rgba(91,224,255,0.14) 0%, transparent 70%);
-    z-index:1;
-    animation: blobpulse 5s ease-in-out infinite;
-  }
-  @keyframes blobpulse {
-    0%,100% { opacity:0.7; transform: translate(-50%,-50%) scale(1); }
-    50% { opacity:1; transform: translate(-50%,-50%) scale(1.1); }
-  }
+#logo-canvas {
+  position:absolute;
+  inset:0; width:100%; height:100%;
+  z-index:1;
+  pointer-events:none;
+}
 
-  /* UI OVERLAY */
-  .ui {
-    position:absolute;
-    top:0; left:0; width:100%; height:100%;
-    pointer-events:none;
-    z-index:30;
-  }
+/* ── BRAND UNIT ── */
+#brand-unit {
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  z-index:2;
+  pointer-events:none;
+  opacity:0;
+  gap:6px;
+}
+#brand-unit.show {
+  opacity:1;
+  transition:opacity 0.8s ease;
+}
 
-  /* CORNER BRACKETS */
-  .corner {
-    position:absolute;
-    width:44px; height:44px;
-    border-color: var(--blue);
-    border-style: solid;
-    opacity:0.7;
-  }
-  .corner-tl { top:28px; left:28px; border-width:2px 0 0 2px; }
-  .corner-tr { top:28px; right:28px; border-width:2px 2px 0 0; }
-  .corner-bl { bottom:28px; left:28px; border-width:0 0 2px 2px; }
-  .corner-br { bottom:28px; right:28px; border-width:0 2px 2px 0; }
+/* XTRA — single word, not split X + TR */
+#brand-xtra {
+  font-size:clamp(72px, 18vw, 200px);
+  font-weight:900;
+  line-height:1;
+  letter-spacing:0.05em;
+  /* X in cyan, TRA in white */
+  color:var(--white);
+  opacity:0;
+  transform:translateY(30px) scaleY(1.06);
+  transition:transform 0.4s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease;
+}
+#brand-xtra .x-letter {
+  color:var(--cyan);
+  text-shadow:
+    0 0 10px var(--cyan),
+    0 0 30px var(--cyan),
+    0 0 70px var(--fuchsia),
+    0 0 140px var(--violet);
+}
+#brand-xtra .tra-letter {
+  color:var(--white);
+  text-shadow:0 0 8px var(--vpale), 0 0 24px var(--violet);
+}
+#brand-xtra.slash-in {
+  transform:translateY(0) scaleY(1);
+  opacity:1;
+}
 
-  /* SIDE DATA PANELS */
-  .panel-left, .panel-right {
-    position:absolute;
-    top:50%; transform:translateY(-50%);
-    display:flex; flex-direction:column; gap:10px;
-    font-family:'Share Tech Mono', monospace;
-    font-size:10px;
-    letter-spacing:0.08em;
-    color: var(--blue);
-    opacity:0.7;
-  }
-  .panel-left { left:40px; align-items:flex-start; }
-  .panel-right { right:40px; align-items:flex-end; }
-  .panel-line {
-    display:flex; gap:8px; align-items:center;
-    animation: dataflicker 4s ease-in-out infinite;
-  }
-  .panel-line:nth-child(2) { animation-delay: 0.5s; }
-  .panel-line:nth-child(3) { animation-delay: 1s; }
-  .panel-line:nth-child(4) { animation-delay: 1.5s; }
-  @keyframes dataflicker {
-    0%,100% { opacity:0.7; }
-    50% { opacity:1; }
-    45% { opacity:0.3; }
-  }
-  .bar { width:50px; height:2px; background: var(--blue-dim); position:relative; }
-  .bar-fill { position:absolute; top:0; left:0; height:100%; background:var(--blue); }
+#brand-dynamics {
+  font-size:clamp(10px, 2.4vw, 26px);
+  font-weight:900;
+  letter-spacing:clamp(8px, 2.2vw, 22px);
+  color:var(--white);
+  text-shadow:0 0 8px var(--violet),0 0 20px var(--violet);
+  opacity:0;
+  transform:translateX(-10px);
+  transition:opacity 0.5s ease 0.35s, transform 0.5s ease 0.35s;
+}
+#brand-dynamics.show { opacity:1; transform:translateX(0); }
 
-  /* TOP TITLE */
-  .title-block {
-    position:absolute;
-    top:36px; left:50%; transform:translateX(-50%);
-    text-align:center;
-  }
-  .brand {
-    font-family: 'Orbitron', sans-serif;
-    font-weight:900;
-    font-size:clamp(22px,3.5vw,42px);
-    letter-spacing:0.22em;
-    color:#fff;
-    text-shadow: 0 0 18px var(--blue), 0 0 40px var(--blue);
-    text-transform:uppercase;
-    animation: brandglow 3s ease-in-out infinite;
-  }
-  @keyframes brandglow {
-    0%,100% { text-shadow: 0 0 18px #5be0ff, 0 0 40px #5be0ff; }
-    50% { text-shadow: 0 0 28px #5be0ff, 0 0 70px #5be0ff, 0 0 4px #fff; }
-  }
-  .brand-sub {
-    font-family:'Share Tech Mono', monospace;
-    font-size:10px;
-    letter-spacing:0.45em;
-    color: var(--blue);
-    opacity:0.65;
-    margin-top:5px;
-    text-transform:uppercase;
-  }
+#brand-tagline {
+  font-family:'Rajdhani', sans-serif;
+  font-weight:300;
+  font-size:clamp(8px,1.1vw,12px);
+  letter-spacing:0.5em;
+  color:var(--red);
+  text-shadow:0 0 10px var(--red);
+  opacity:0;
+  transition:opacity 0.6s ease 0.55s;
+  text-transform:uppercase;
+}
+#brand-tagline.show { opacity:1; }
 
-  /* BOTTOM TAGLINE */
-  .tagline-block {
-    position:absolute;
-    bottom:52px; left:50%; transform:translateX(-50%);
-    text-align:center;
-  }
-  .tagline {
-    font-family:'Orbitron', sans-serif;
-    font-weight:700;
-    font-size:clamp(11px,1.6vw,18px);
-    letter-spacing:0.28em;
-    color: var(--red);
-    text-shadow: 0 0 14px var(--red), 0 0 30px var(--red);
-    text-transform:uppercase;
-    animation: tagpulse 4s ease-in-out infinite;
-  }
-  @keyframes tagpulse {
-    0%,100% { opacity:1; }
-    50% { opacity:0.75; }
-  }
-  .tagline-divider {
-    margin: 8px auto;
-    width: 160px; height:1px;
-    background: linear-gradient(to right, transparent, var(--red), transparent);
-    opacity:0.5;
-  }
-  .tagline-sub {
-    font-family:'Share Tech Mono', monospace;
-    font-size:9px;
-    letter-spacing:0.4em;
-    color:rgba(255,255,255,0.35);
-    text-transform:uppercase;
-  }
+/* ── SCENES ── */
+.scene {
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  opacity:0;
+  pointer-events:none;
+  z-index:5;
+  transition:opacity 1s ease;
+}
+.scene.show { opacity:1; }
 
-  /* RETICLE RINGS */
-  .reticle {
-    position:absolute;
-    top:50%; left:50%;
-    transform: translate(-50%, -38%);
-    width:320px; height:320px;
-    z-index:5;
-    pointer-events:none;
-  }
-  .ring {
-    position:absolute;
-    border-radius:50%;
-    border:1px solid;
-    top:50%; left:50%;
-    transform:translate(-50%,-50%);
-  }
-  .ring-1 {
-    width:260px; height:260px;
-    border-color: rgba(91,224,255,0.12);
-    animation: spin 20s linear infinite;
-  }
-  .ring-2 {
-    width:200px; height:200px;
-    border-color: rgba(91,224,255,0.08);
-    animation: spin 30s linear infinite reverse;
-  }
-  /* tick marks */
-  .ring-1::before, .ring-1::after {
-    content:'';
-    position:absolute;
-    background: var(--blue);
-    opacity:0.5;
-  }
-  .ring-1::before { width:8px; height:1px; top:50%; left:0; transform:translateY(-50%); }
-  .ring-1::after  { width:8px; height:1px; top:50%; right:0; transform:translateY(-50%); }
-  @keyframes spin { to { transform:translate(-50%,-50%) rotate(360deg); } }
+/* ── MISSILE SCENE ── */
+#missile-inner {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:16px;
+  opacity:0;
+  transform:scale(0.97);
+  transition:opacity 1s ease, transform 1s ease;
+}
+#missile-inner.show { opacity:1; transform:scale(1); }
 
-  /* HORIZONTAL DIVIDER LINES */
-  .hline {
-    position:absolute;
-    height:1px;
-    background: linear-gradient(to right, transparent, var(--blue), transparent);
-    opacity:0.18;
-    width:100%;
-  }
-  .hline-top { top:88px; }
-  .hline-bot { bottom:88px; }
+#missile-label {
+  font-size:clamp(8px,1.1vw,11px);
+  letter-spacing:8px;
+  color:var(--cyan);
+  text-shadow:0 0 10px var(--cyan);
+  font-family:'Rajdhani', sans-serif;
+  font-weight:600;
+}
 
-  /* CLASSIFICATION STAMP */
-  .stamp {
-    position:absolute;
-    top:94px; right:44px;
-    font-family:'Share Tech Mono', monospace;
-    font-size:8px;
-    letter-spacing:0.2em;
-    color: var(--red);
-    opacity:0.45;
-    text-transform:uppercase;
-    border:1px solid var(--red);
-    padding:2px 6px;
-    transform: rotate(2deg);
-  }
+#missile-frame {
+  position:relative;
+  width:clamp(260px,50vw,700px);
+  height:clamp(180px,36vh,460px);
+  border:1px solid #1a004a;
+  background:#02000a;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+#missile-frame::before {
+  content:''; position:absolute; top:-1px; left:-1px;
+  width:28px; height:28px;
+  border-top:2px solid var(--cyan); border-left:2px solid var(--cyan);
+  box-shadow:0 0 12px var(--cyan);
+}
+#missile-frame::after {
+  content:''; position:absolute; bottom:-1px; right:-1px;
+  width:28px; height:28px;
+  border-bottom:2px solid var(--fuchsia); border-right:2px solid var(--fuchsia);
+  box-shadow:0 0 12px var(--fuchsia);
+}
 
-  /* COORDINATES */
-  .coords {
-    position:absolute;
-    bottom:92px; left:44px;
-    font-family:'Share Tech Mono', monospace;
-    font-size:8.5px;
-    color: var(--blue);
-    opacity:0.4;
-    letter-spacing:0.1em;
-  }
+/* Missile canvas fills the frame */
+#missile-canvas {
+  width:100%; height:100%;
+}
 
-</style>
+/* Drop-in video override — uncomment when you have the export */
+/*
+#missile-frame video {
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:contain;
+}
+*/
+
+#missile-specs {
+  display:flex; align-items:center; gap:14px;
+  font-size:clamp(7px,0.9vw,9px); letter-spacing:3px;
+  font-family:'Rajdhani', sans-serif; font-weight:600;
+}
+.spec { color:#555; }
+.spec em { font-style:normal; color:var(--cyan); margin-left:6px; }
+.sdiv { color:#1a004a; }
+
+/* ── END CARD ── */
+#end-inner {
+  display:flex; flex-direction:column;
+  align-items:center; gap:12px;
+  opacity:0; transition:opacity 1.4s ease;
+}
+#end-inner.show { opacity:1; }
+
+#end-xtra {
+  font-size:clamp(80px,20vw,220px);
+  font-weight:900; line-height:1;
+  letter-spacing:0.04em;
+}
+#ex  { color:var(--cyan);    text-shadow:0 0 20px var(--cyan),  0 0 60px var(--cyan);    }
+#etra{ color:var(--white);   text-shadow:0 0 8px var(--vpale), 0 0 24px var(--violet);  }
+#end-dynamics {
+  font-size:clamp(8px,1.4vw,16px);
+  letter-spacing:clamp(6px,1.6vw,18px);
+  color:var(--white);
+  text-shadow:0 0 8px var(--violet);
+  font-weight:900;
+}
+#end-credit {
+  font-size:clamp(6px,0.8vw,9px); letter-spacing:3px; color:#333;
+  font-family:'Rajdhani', sans-serif; font-weight:300;
+}
+
+/* scan line over whole page */
+#scan-overlay {
+  position:fixed; inset:0;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,255,255,0.015) 2px,
+    rgba(0,255,255,0.015) 4px
+  );
+  pointer-events:none;
+  z-index:100;
+  animation:scanmove 8s linear infinite;
+}
+@keyframes scanmove {
+  0%  { background-position:0 0; }
+  100%{ background-position:0 100px; }
+}
+  </style>
 </head>
 <body>
-<div class="scene">
 
-  <!-- Floor Grid -->
-  <div class="floor"></div>
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<div id="scan-overlay"></div>
 
-  <!-- Glow behind missile -->
-  <div class="glow-blob"></div>
+<div id="stage">
 
-  <!-- MISSILE -->
-  <div class="missile-wrap">
-    <div class="scanline"></div>
-    <svg class="missile-svg" width="160" height="500" viewBox="0 0 160 500" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <!-- Blue wireframe stroke -->
-        <filter id="blueGlow">
-          <feGaussianBlur stdDeviation="2.5" result="blur"/>
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <filter id="redGlow">
-          <feGaussianBlur stdDeviation="2" result="blur"/>
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
+  <canvas id="venom-canvas"></canvas>
+  <canvas id="logo-canvas"></canvas>
 
-      <!-- ========= BLUE WIREFRAME BODY ========= -->
-      <g filter="url(#blueGlow)" stroke="#5be0ff" stroke-width="1.1" fill="none" opacity="0.92">
-
-        <!-- NOSE CONE (tapered top) -->
-        <!-- left edge -->
-        <line x1="64" y1="0" x2="40" y2="80"/>
-        <!-- right edge -->
-        <line x1="96" y1="0" x2="120" y2="80"/>
-        <!-- horizontal slices on nose -->
-        <ellipse cx="80" cy="20" rx="9" ry="4"/>
-        <ellipse cx="80" cy="38" rx="17" ry="5"/>
-        <ellipse cx="80" cy="56" rx="25" ry="5.5"/>
-        <ellipse cx="80" cy="74" rx="32" ry="6"/>
-        <!-- vertical lines on nose -->
-        <line x1="71" y1="5" x2="44" y2="78"/>
-        <line x1="89" y1="5" x2="116" y2="78"/>
-        <line x1="80" y1="1" x2="80" y2="80"/>
-
-        <!-- TOP CAP ring -->
-        <ellipse cx="80" cy="80" rx="40" ry="9"/>
-
-        <!-- UPPER BODY (tall cylinder) -->
-        <!-- left/right silhouette -->
-        <line x1="40" y1="80" x2="40" y2="300"/>
-        <line x1="120" y1="80" x2="120" y2="300"/>
-        <!-- Horizontal rings every ~30px -->
-        <ellipse cx="80" cy="110" rx="40" ry="9"/>
-        <ellipse cx="80" cy="140" rx="40" ry="9"/>
-        <ellipse cx="80" cy="170" rx="40" ry="9"/>
-        <ellipse cx="80" cy="200" rx="40" ry="9"/>
-        <ellipse cx="80" cy="230" rx="40" ry="9"/>
-        <ellipse cx="80" cy="260" rx="40" ry="9"/>
-        <ellipse cx="80" cy="290" rx="40" ry="9"/>
-        <!-- Vertical lines on body -->
-        <line x1="60" y1="80" x2="60" y2="300"/>
-        <line x1="80" y1="80" x2="80" y2="300"/>
-        <line x1="100" y1="80" x2="100" y2="300"/>
-        <!-- back side ghost lines -->
-        <line x1="50" y1="80" x2="50" y2="300" opacity="0.3"/>
-        <line x1="110" y1="80" x2="110" y2="300" opacity="0.3"/>
-
-        <!-- LOWER BODY SEGMENT -->
-        <ellipse cx="80" cy="340" rx="40" ry="9"/>
-        <ellipse cx="80" cy="370" rx="40" ry="9"/>
-        <line x1="40" y1="300" x2="40" y2="390"/>
-        <line x1="120" y1="300" x2="120" y2="390"/>
-        <line x1="60" y1="300" x2="60" y2="390"/>
-        <line x1="80" y1="300" x2="80" y2="390"/>
-        <line x1="100" y1="300" x2="100" y2="390"/>
-
-        <!-- NOZZLE COLLAR taper -->
-        <line x1="40" y1="390" x2="48" y2="430"/>
-        <line x1="120" y1="390" x2="112" y2="430"/>
-        <ellipse cx="80" cy="430" rx="32" ry="7"/>
-        <ellipse cx="80" cy="410" rx="37" ry="8"/>
-        <line x1="64" y1="393" x2="64" y2="430"/>
-        <line x1="80" y1="393" x2="80" y2="433"/>
-        <line x1="96" y1="393" x2="96" y2="430"/>
-
-        <!-- NOZZLE bell -->
-        <line x1="48" y1="430" x2="44" y2="470"/>
-        <line x1="112" y1="430" x2="116" y2="470"/>
-        <ellipse cx="80" cy="460" rx="38" ry="8"/>
-        <ellipse cx="80" cy="470" rx="36" ry="8"/>
-        <line x1="80" y1="433" x2="80" y2="474"/>
-        <line x1="62" y1="431" x2="60" y2="471"/>
-        <line x1="98" y1="431" x2="100" y2="471"/>
-      </g>
-
-      <!-- ========= RED/PINK MID SECTION BAND (warhead section) ========= -->
-      <g filter="url(#redGlow)" stroke="#ff4466" stroke-width="1.2" fill="none" opacity="0.9">
-        <!-- Band rings -->
-        <ellipse cx="80" cy="120" rx="42" ry="10"/>
-        <ellipse cx="80" cy="150" rx="42" ry="10"/>
-        <ellipse cx="80" cy="180" rx="42" ry="10"/>
-        <!-- vertical segements on band -->
-        <line x1="38" y1="120" x2="38" y2="180"/>
-        <line x1="122" y1="120" x2="122" y2="180"/>
-        <line x1="58" y1="119" x2="58" y2="181"/>
-        <line x1="80" y1="119" x2="80" y2="181"/>
-        <line x1="102" y1="119" x2="102" y2="181"/>
-        <!-- detail nubs / tabs -->
-        <line x1="38" y1="135" x2="28" y2="140"/>
-        <line x1="38" y1="160" x2="28" y2="165"/>
-        <line x1="122" y1="135" x2="132" y2="140"/>
-        <line x1="122" y1="160" x2="132" y2="165"/>
-        <ellipse cx="80" cy="165" rx="8" ry="3" opacity="0.5"/>
-      </g>
-
-      <!-- ========= RED FINS ========= -->
-      <g filter="url(#redGlow)" stroke="#ff4466" stroke-width="1.2" fill="none" opacity="0.88">
-        <!-- LEFT FIN -->
-        <polygon points="40,330 10,390 14,415 40,390"/>
-        <!-- internal grid left fin -->
-        <line x1="40" y1="345" x2="18" y2="397"/>
-        <line x1="40" y1="360" x2="22" y2="405"/>
-        <line x1="24" y1="370" x2="40" y2="370"/>
-        <line x1="16" y1="393" x2="40" y2="388"/>
-
-        <!-- RIGHT FIN -->
-        <polygon points="120,330 150,390 146,415 120,390"/>
-        <!-- internal grid right fin -->
-        <line x1="120" y1="345" x2="142" y2="397"/>
-        <line x1="120" y1="360" x2="138" y2="405"/>
-        <line x1="136" y1="370" x2="120" y2="370"/>
-        <line x1="144" y1="393" x2="120" y2="388"/>
-
-        <!-- FIN BAND ring -->
-        <ellipse cx="80" cy="328" rx="42" ry="9"/>
-        <ellipse cx="80" cy="355" rx="42" ry="9"/>
-        <ellipse cx="80" cy="385" rx="42" ry="9"/>
-
-        <!-- fin-section body verticals -->
-        <line x1="38" y1="328" x2="38" y2="390"/>
-        <line x1="122" y1="328" x2="122" y2="390"/>
-        <line x1="60" y1="327" x2="60" y2="391"/>
-        <line x1="100" y1="327" x2="100" y2="391"/>
-      </g>
-
-    </svg>
-  </div><!-- /missile-wrap -->
-
-  <!-- RETICLE RINGS -->
-  <div class="reticle">
-    <div class="ring ring-1"></div>
-    <div class="ring ring-2"></div>
+  <!-- INTRO BRAND -->
+  <div id="brand-unit">
+    <div id="brand-xtra">
+      <span class="x-letter">X</span><span class="tra-letter">TRA</span>
+    </div>
+    <div id="brand-dynamics">DYNAMICS</div>
+    <div id="brand-tagline">Engineered for Dominance</div>
   </div>
 
-  <!-- UI OVERLAY -->
-  <div class="ui">
-    <div class="corner corner-tl"></div>
-    <div class="corner corner-tr"></div>
-    <div class="corner corner-bl"></div>
-    <div class="corner corner-br"></div>
-
-    <!-- TITLE -->
-    <div class="title-block">
-      <div class="brand">XTRA DYNAMICS</div>
-      <div class="brand-sub">Precision Systems Division</div>
+  <!-- MISSILE SCENE -->
+  <div class="scene" id="scene-missile">
+    <div id="missile-inner">
+      <div id="missile-label">PROTOTYPE — XTRA MK·I</div>
+      <div id="missile-frame">
+        <canvas id="missile-canvas"></canvas>
+        <!--
+          WHEN BLENDER EXPORT IS READY, REPLACE CANVAS WITH:
+          <video src="assets/video/missile-rotate.mp4" autoplay muted loop playsinline></video>
+        -->
+      </div>
+      <div id="missile-specs">
+        <span class="spec">DESIGNATION <em>XTRA-MK1</em></span>
+        <span class="sdiv">|</span>
+        <span class="spec">CLASS <em>PROTOTYPE</em></span>
+        <span class="sdiv">|</span>
+        <span class="spec">STATUS <em>CLASSIFIED</em></span>
+      </div>
     </div>
+  </div>
 
-    <!-- CLASSIFICATION -->
-    <div class="stamp">CLASSIFIED</div>
-
-    <!-- COORDINATES -->
-    <div class="coords">17°N 78°E · ALT 00.00 · SYS ONLINE</div>
-
-    <!-- HORIZONTAL DIVIDERS -->
-    <div class="hline hline-top"></div>
-    <div class="hline hline-bot"></div>
-
-    <!-- LEFT PANEL -->
-    <div class="panel-left">
-      <div class="panel-line">VEL <div class="bar"><div class="bar-fill" style="width:88%"></div></div> MACH 4.2</div>
-      <div class="panel-line">ALT <div class="bar"><div class="bar-fill" style="width:60%"></div></div> 24.5km</div>
-      <div class="panel-line">RNG <div class="bar"><div class="bar-fill" style="width:75%"></div></div> 1200km</div>
-      <div class="panel-line">CEP <div class="bar"><div class="bar-fill" style="width:95%"></div></div> 0.8m</div>
-    </div>
-
-    <!-- RIGHT PANEL -->
-    <div class="panel-right">
-      <div class="panel-line">GUIDANCE · ACTIVE</div>
-      <div class="panel-line">PROPULSION · SOLID</div>
-      <div class="panel-line">PAYLOAD · CLASSIFIED</div>
-      <div class="panel-line">STATUS · NOMINAL</div>
-    </div>
-
-    <!-- TAGLINE -->
-    <div class="tagline-block">
-      <div class="tagline">Engineered for Dominance</div>
-      <div class="tagline-divider"></div>
-      <div class="tagline-sub">xtra-dynamics.com · est. 2024</div>
+  <!-- END CARD -->
+  <div class="scene" id="scene-end">
+    <div id="end-inner">
+      <div id="end-xtra"><span id="ex">X</span><span id="etra">TRA</span></div>
+      <div id="end-dynamics">DYNAMICS</div>
+      <div id="end-credit">© XTRA DYNAMICS · ALL RIGHTS RESERVED</div>
     </div>
   </div>
 
 </div>
+
+<script>
+/* ════════════════════════════════════════════════
+   XTRA DYNAMICS  —  ad.js  (v5, self-contained)
+   ════════════════════════════════════════════════ */
+
+/* ── CURSOR ── */
+const cur = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+document.addEventListener('mousemove', e => {
+  cur.style.left  = e.clientX + 'px';
+  cur.style.top   = e.clientY + 'px';
+  ring.style.left = e.clientX + 'px';
+  ring.style.top  = e.clientY + 'px';
+});
+
+/* ── VENOM TENDRILS (particle web) ── */
+(function venomInit() {
+  const vc  = document.getElementById('venom-canvas');
+  const ctx = vc.getContext('2d');
+  let W, H;
+
+  const COLORS = ['#9D00FF','#FF00FF','#00FFFF','#5be0ff','#FF2255'];
+  const N = 90;
+  let nodes = [];
+
+  function resize() {
+    W = vc.width  = window.innerWidth;
+    H = vc.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  class Node {
+    constructor() { this.reset(); }
+    reset() {
+      this.x  = Math.random() * W;
+      this.y  = Math.random() * H;
+      this.vx = (Math.random() - 0.5) * 0.5;
+      this.vy = (Math.random() - 0.5) * 0.5;
+      this.r  = Math.random() * 1.5 + 0.4;
+      this.c  = COLORS[Math.floor(Math.random() * COLORS.length)];
+      this.life = 0;
+      this.maxLife = 300 + Math.random() * 400;
+    }
+    update() {
+      this.x += this.vx; this.y += this.vy; this.life++;
+      if (this.life > this.maxLife ||
+          this.x < -20 || this.x > W+20 ||
+          this.y < -20 || this.y > H+20) this.reset();
+    }
+  }
+
+  for (let i = 0; i < N; i++) nodes.push(new Node());
+
+  function venomDraw() {
+    ctx.clearRect(0, 0, W, H);
+    for (const n of nodes) n.update();
+
+    const DIST = 140;
+    for (let i = 0; i < N; i++) {
+      for (let j = i+1; j < N; j++) {
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        const d  = Math.sqrt(dx*dx + dy*dy);
+        if (d < DIST) {
+          const alpha = (1 - d/DIST) * 0.35;
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.strokeStyle = nodes[i].c;
+          ctx.lineWidth   = 0.6;
+          ctx.shadowColor = nodes[i].c;
+          ctx.shadowBlur  = 4;
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x, nodes[i].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+      ctx.save();
+      ctx.globalAlpha = 0.7;
+      ctx.fillStyle = nodes[i].c;
+      ctx.shadowColor = nodes[i].c;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(nodes[i].x, nodes[i].y, nodes[i].r, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    requestAnimationFrame(venomDraw);
+  }
+  venomDraw();
+})();
+
+/* ── LOGO SLASH STROKES ── */
+(function logoInit() {
+  const lc  = document.getElementById('logo-canvas');
+  const ctx = lc.getContext('2d');
+  let W, H;
+  let strokes = [];
+  let active = false;
+
+  function resize() {
+    W = lc.width  = window.innerWidth;
+    H = lc.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Each stroke: a diagonal slash across the canvas
+  function createStrokes() {
+    const cx = W/2, cy = H/2;
+    const hw = Math.min(W, H) * 0.32;
+
+    strokes = [
+      // X left-down stroke
+      { x1:cx - hw*0.6, y1:cy - hw*0.85,
+        x2:cx + hw*0.6, y2:cy + hw*0.85,
+        color:'#00FFFF', progress:0, width:3 },
+      // X right-down stroke
+      { x1:cx + hw*0.6, y1:cy - hw*0.85,
+        x2:cx - hw*0.6, y2:cy + hw*0.85,
+        color:'#FF00FF', progress:0, width:3 },
+    ];
+  }
+
+  function drawStrokes(t) {
+    if (!active) return;
+    ctx.clearRect(0, 0, W, H);
+
+    for (const s of strokes) {
+      if (s.progress >= 1) continue;
+      s.progress = Math.min(1, s.progress + 0.04);
+      const ex = s.x1 + (s.x2 - s.x1) * s.progress;
+      const ey = s.y1 + (s.y2 - s.y1) * s.progress;
+
+      ctx.save();
+      ctx.globalAlpha = 0.22;
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth   = s.width;
+      ctx.shadowColor = s.color;
+      ctx.shadowBlur  = 18;
+      ctx.lineCap     = 'round';
+      ctx.beginPath();
+      ctx.moveTo(s.x1, s.y1);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    if (strokes.some(s => s.progress < 1)) {
+      requestAnimationFrame(drawStrokes);
+    } else {
+      // fade out after full draw
+      setTimeout(() => {
+        ctx.clearRect(0, 0, W, H);
+        active = false;
+      }, 800);
+    }
+  }
+
+  // expose trigger
+  window.triggerLogoSlash = function() {
+    active = true;
+    createStrokes();
+    requestAnimationFrame(drawStrokes);
+  };
+})();
+
+/* ── WIREFRAME MISSILE CANVAS ── */
+(function missileInit() {
+  const mc  = document.getElementById('missile-canvas');
+  if (!mc) return;
+  const ctx = mc.getContext('2d');
+  let W, H, raf;
+  let angle = 0;
+
+  function resize() {
+    const frame = mc.parentElement;
+    W = mc.width  = frame.clientWidth;
+    H = mc.height = frame.clientHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // ── Ellipse helpers that respond to rotation ──
+  // We simulate a simple slow Y-axis rotation by skewing x positions
+  function ellipseX(cx, rx, a) {
+    // rx scaled by cos(angle) for rotation illusion
+    return { cx, rx: rx * Math.abs(Math.cos(a)), ry: rx * 0.22 };
+  }
+
+  function drawMissile(a) {
+    ctx.clearRect(0, 0, W, H);
+
+    const cx   = W / 2;
+    const base = H * 0.88;
+    const top  = H * 0.05;
+    const totalH = base - top;
+
+    // Body proportions (0..1 of totalH from top)
+    const noseTip   = top;
+    const noseBase  = top + totalH * 0.18;
+    const bodyTop   = noseBase;
+    const midTop    = top + totalH * 0.28;
+    const midBot    = top + totalH * 0.48;
+    const bodyBot   = top + totalH * 0.75;
+    const finTop    = top + totalH * 0.72;
+    const finBot    = top + totalH * 0.88;
+    const nozzleBot = base;
+
+    const BR = W * 0.11;   // body radius
+    const NR = W * 0.05;   // nose tip radius
+    const cos = Math.cos(a);
+
+    // ── BLUE WIREFRAME (body) ──
+    ctx.save();
+    ctx.shadowColor = '#5be0ff';
+    ctx.shadowBlur  = 10;
+    ctx.strokeStyle = '#5be0ff';
+    ctx.lineWidth   = 1.1;
+    ctx.globalAlpha = 0.92;
+
+    function ellipseH(y, rx) {
+      ctx.beginPath();
+      ctx.ellipse(cx, y, rx * Math.abs(cos) || 1, rx * 0.22, 0, 0, Math.PI*2);
+      ctx.stroke();
+    }
+    function vLine(offR, y1, y2) {
+      // offset on body surface
+      const ox = offR * cos;
+      ctx.beginPath();
+      ctx.moveTo(cx + ox, y1);
+      ctx.lineTo(cx + ox, y2);
+      ctx.stroke();
+    }
+
+    // Nose cone silhouette
+    ctx.beginPath();
+    ctx.moveTo(cx, noseTip);
+    ctx.lineTo(cx - BR * Math.abs(cos), noseBase);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, noseTip);
+    ctx.lineTo(cx + BR * Math.abs(cos), noseBase);
+    ctx.stroke();
+
+    // Nose horizontal slices
+    const nsSlices = 5;
+    for (let i = 1; i <= nsSlices; i++) {
+      const t  = i / nsSlices;
+      const y  = noseTip + (noseBase - noseTip) * t;
+      const rx = BR * t;
+      ellipseH(y, rx);
+    }
+
+    // Body rings
+    const ringYs = [];
+    const bodyRings = 10;
+    for (let i = 0; i <= bodyRings; i++) {
+      const y = bodyTop + (bodyBot - bodyTop) * i / bodyRings;
+      ringYs.push(y);
+      ellipseH(y, BR);
+    }
+
+    // Body vertical lines
+    for (const ox of [-1, -0.5, 0, 0.5, 1]) {
+      vLine(BR * ox, bodyTop, bodyBot);
+    }
+
+    // Lower body / nozzle collar
+    const nozzleR = BR * 0.75;
+    ellipseH(bodyBot + (nozzleBot - bodyBot) * 0.5, BR * 0.88);
+    ellipseH(nozzleBot, nozzleR);
+    ctx.beginPath();
+    ctx.moveTo(cx - BR * Math.abs(cos), bodyBot);
+    ctx.lineTo(cx - nozzleR * Math.abs(cos), nozzleBot);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + BR * Math.abs(cos), bodyBot);
+    ctx.lineTo(cx + nozzleR * Math.abs(cos), nozzleBot);
+    ctx.stroke();
+    vLine(0, bodyBot, nozzleBot);
+
+    ctx.restore();
+
+    // ── RED WIREFRAME (mid band + fins) ──
+    ctx.save();
+    ctx.shadowColor = '#FF2255';
+    ctx.shadowBlur  = 10;
+    ctx.strokeStyle = '#FF2255';
+    ctx.lineWidth   = 1.2;
+    ctx.globalAlpha = 0.9;
+
+    function ellipseR(y, rx) {
+      ctx.beginPath();
+      ctx.ellipse(cx, y, rx * Math.abs(cos) || 1, rx * 0.22, 0, 0, Math.PI*2);
+      ctx.stroke();
+    }
+
+    // Mid band rings
+    const midRings = 4;
+    for (let i = 0; i <= midRings; i++) {
+      const y = midTop + (midBot - midTop) * i / midRings;
+      ellipseR(y, BR + 2);
+    }
+    // Mid band verticals
+    for (const ox of [-1, -0.5, 0, 0.5, 1]) {
+      const x = cx + (BR + 2) * ox * cos;
+      ctx.beginPath();
+      ctx.moveTo(x, midTop);
+      ctx.lineTo(x, midBot);
+      ctx.stroke();
+    }
+
+    // Fins — two visible fins left/right
+    // Fin geometry: triangle from body out and down
+    const finW = BR * 1.0;
+    const leftBase  = cx - BR * Math.abs(cos);
+    const rightBase = cx + BR * Math.abs(cos);
+
+    // Left fin
+    const lf = [
+      [leftBase, finTop],
+      [leftBase - finW * Math.abs(cos), finBot],
+      [leftBase, finBot],
+    ];
+    ctx.beginPath();
+    ctx.moveTo(...lf[0]); ctx.lineTo(...lf[1]); ctx.lineTo(...lf[2]); ctx.closePath();
+    ctx.stroke();
+    // internal fin lines
+    for (let i = 1; i <= 3; i++) {
+      const t = i/4;
+      ctx.beginPath();
+      ctx.moveTo(lf[0][0] * (1-t) + lf[1][0]*t, lf[0][1]*(1-t)+lf[1][1]*t);
+      ctx.lineTo(lf[2][0], lf[0][1]*(1-t)+lf[1][1]*t);
+      ctx.stroke();
+    }
+
+    // Right fin (mirror)
+    const rf = [
+      [rightBase, finTop],
+      [rightBase + finW * Math.abs(cos), finBot],
+      [rightBase, finBot],
+    ];
+    ctx.beginPath();
+    ctx.moveTo(...rf[0]); ctx.lineTo(...rf[1]); ctx.lineTo(...rf[2]); ctx.closePath();
+    ctx.stroke();
+    for (let i = 1; i <= 3; i++) {
+      const t = i/4;
+      ctx.beginPath();
+      ctx.moveTo(rf[0][0]*(1-t)+rf[1][0]*t, rf[0][1]*(1-t)+rf[1][1]*t);
+      ctx.lineTo(rf[2][0], rf[0][1]*(1-t)+rf[1][1]*t);
+      ctx.stroke();
+    }
+
+    // Fin band rings
+    ellipseR(finTop, BR + 1);
+    ellipseR(finBot, BR + 1);
+
+    ctx.restore();
+
+    // ── SCAN LINE ──
+    const scanY = noseTip + ((Date.now() * 0.0004) % 1) * (nozzleBot - noseTip);
+    ctx.save();
+    const grad = ctx.createLinearGradient(cx - BR, scanY, cx + BR, scanY);
+    grad.addColorStop(0, 'transparent');
+    grad.addColorStop(0.5, 'rgba(255,255,255,0.7)');
+    grad.addColorStop(1, 'transparent');
+    ctx.strokeStyle = grad;
+    ctx.lineWidth   = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx - BR, scanY);
+    ctx.lineTo(cx + BR, scanY);
+    ctx.stroke();
+    ctx.restore();
+
+    // ── GLOW pulse ──
+    const gAlpha = 0.06 + 0.03 * Math.sin(Date.now() * 0.002);
+    const grd = ctx.createRadialGradient(cx, H*0.5, 0, cx, H*0.5, BR*2.5);
+    grd.addColorStop(0, `rgba(91,224,255,${gAlpha})`);
+    grd.addColorStop(1, 'transparent');
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.ellipse(cx, H*0.5, BR*2.5, H*0.38, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  let running = false;
+  window.startMissileRender = function() {
+    if (running) return;
+    running = true;
+    function loop() {
+      angle += 0.007;
+      drawMissile(angle);
+      raf = requestAnimationFrame(loop);
+    }
+    loop();
+  };
+  window.stopMissileRender = function() {
+    running = false;
+    cancelAnimationFrame(raf);
+  };
+})();
+
+/* ── SEQUENCER ── */
+(function seq() {
+  const brandUnit     = document.getElementById('brand-unit');
+  const brandXtra     = document.getElementById('brand-xtra');
+  const brandDynamics = document.getElementById('brand-dynamics');
+  const brandTagline  = document.getElementById('brand-tagline');
+  const sceneMissile  = document.getElementById('scene-missile');
+  const missileInner  = document.getElementById('missile-inner');
+  const sceneEnd      = document.getElementById('scene-end');
+  const endInner      = document.getElementById('end-inner');
+
+  function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  async function run() {
+    // — INTRO: brand slash in —
+    await delay(400);
+    brandUnit.classList.add('show');
+    window.triggerLogoSlash();
+
+    await delay(200);
+    brandXtra.classList.add('slash-in');
+
+    await delay(300);
+    brandDynamics.classList.add('show');
+
+    await delay(400);
+    brandTagline.classList.add('show');
+
+    // — hold brand —
+    await delay(2200);
+
+    // — TRANSITION to missile —
+    brandUnit.style.transition = 'opacity 0.6s ease';
+    brandUnit.style.opacity    = '0';
+
+    await delay(700);
+    brandUnit.style.pointerEvents = 'none';
+
+    sceneMissile.classList.add('show');
+    await delay(200);
+    missileInner.classList.add('show');
+    window.startMissileRender();
+
+    // — hold missile scene —
+    await delay(5000);
+
+    // — TRANSITION to end card —
+    sceneMissile.style.transition = 'opacity 0.8s ease';
+    sceneMissile.style.opacity    = '0';
+    window.stopMissileRender();
+
+    await delay(900);
+    sceneEnd.classList.add('show');
+    endInner.classList.add('show');
+
+    // — loop after hold —
+    await delay(4000);
+    location.reload();   // remove if you want it to hold indefinitely
+  }
+
+  run();
+})();
+</script>
 </body>
 </html>
