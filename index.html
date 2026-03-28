@@ -1,313 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>XTRA DYNAMICS</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Rajdhani:wght@300;600&display=swap" rel="stylesheet"/>
-  <style>
-/* ── XTR DYNAMICS v5 — XTRA DYNAMICS remaster ── */
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>XTRA DYNAMICS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Rajdhani:wght@300;600&display=swap" rel="stylesheet"/>
+<style>
 :root {
   --cyan:    #00FFFF;
   --fuchsia: #FF00FF;
   --violet:  #9D00FF;
   --vpale:   #E0AAFF;
   --white:   #F0F0F0;
-  --neon-g:  #00FF88;
+  --blue:    #1E6EFF;
   --red:     #FF2255;
-  --blue-wire: #5be0ff;
 }
-
-*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
-  width:100%; height:100%;
-  overflow:hidden;
-  background:#000;
-  font-family:'Orbitron', monospace;
-  cursor:none;
-}
-
-/* ── CURSOR ── */
-#cursor {
-  position:fixed;
-  width:10px; height:10px;
-  border-radius:50%;
-  background:var(--violet);
-  box-shadow:0 0 6px var(--violet),0 0 16px var(--violet),0 0 32px var(--fuchsia);
-  pointer-events:none;
-  z-index:9999;
-  transform:translate(-50%,-50%);
-  mix-blend-mode:screen;
-  transition:left 0.03s linear,top 0.03s linear;
-}
-#cursor-ring {
-  position:fixed;
-  width:26px; height:26px;
-  border-radius:50%;
-  border:1px solid var(--cyan);
-  box-shadow:0 0 8px var(--cyan);
-  pointer-events:none;
-  z-index:9998;
-  transform:translate(-50%,-50%);
-  opacity:0.5;
-  transition:left 0.10s ease,top 0.10s ease;
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: #000;
+  font-family: 'Orbitron', monospace;
+  /* default system cursor */
 }
 
 /* ── STAGE ── */
-#stage {
-  position:fixed;
-  inset:0;
-  width:100vw; height:100vh;
-}
+#stage { position: fixed; inset: 0; width: 100vw; height: 100vh; }
 
 #venom-canvas {
-  position:absolute;
-  inset:0; width:100%; height:100%;
-  z-index:0;
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
 }
 
-#logo-canvas {
-  position:absolute;
-  inset:0; width:100%; height:100%;
-  z-index:1;
-  pointer-events:none;
+/* scanline overlay */
+#scan-overlay {
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0,255,255,.012) 2px, rgba(0,255,255,.012) 4px
+  );
+  pointer-events: none;
+  z-index: 100;
+  animation: scanmove 8s linear infinite;
+}
+@keyframes scanmove {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 100px; }
 }
 
-/* ── BRAND UNIT ── */
+/* ── BRAND UNIT — INTRO ── */
 #brand-unit {
-  position:absolute;
-  inset:0;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  z-index:2;
-  pointer-events:none;
-  opacity:0;
-  gap:6px;
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 2; pointer-events: none;
+  opacity: 0; gap: 10px;
 }
-#brand-unit.show {
-  opacity:1;
-  transition:opacity 0.8s ease;
-}
+#brand-unit.show { opacity: 1; transition: opacity 0.8s ease; }
 
-/* XTRA — single word, not split X + TR */
-#brand-xtra {
-  font-size:clamp(72px, 18vw, 200px);
-  font-weight:900;
-  line-height:1;
-  letter-spacing:0.05em;
-  /* X in cyan, TRA in white */
-  color:var(--white);
-  opacity:0;
-  transform:translateY(30px) scaleY(1.06);
-  transition:transform 0.4s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease;
+#logo-img {
+  width: clamp(240px, 38vw, 520px);
+  height: auto;
+  opacity: 0;
+  transform: translateY(22px);
+  transition: transform 0.5s cubic-bezier(0.22,1,0.36,1), opacity 0.4s ease;
+  filter: drop-shadow(0 0 20px rgba(30,110,255,.55))
+          drop-shadow(0 0 6px rgba(0,255,255,.3));
 }
-#brand-xtra .x-letter {
-  color:var(--cyan);
-  text-shadow:
-    0 0 10px var(--cyan),
-    0 0 30px var(--cyan),
-    0 0 70px var(--fuchsia),
-    0 0 140px var(--violet);
+#logo-img.show {
+  opacity: 1;
+  transform: translateY(0);
 }
-#brand-xtra .tra-letter {
-  color:var(--white);
-  text-shadow:0 0 8px var(--vpale), 0 0 24px var(--violet);
-}
-#brand-xtra.slash-in {
-  transform:translateY(0) scaleY(1);
-  opacity:1;
-}
-
-#brand-dynamics {
-  font-size:clamp(10px, 2.4vw, 26px);
-  font-weight:900;
-  letter-spacing:clamp(8px, 2.2vw, 22px);
-  color:var(--white);
-  text-shadow:0 0 8px var(--violet),0 0 20px var(--violet);
-  opacity:0;
-  transform:translateX(-10px);
-  transition:opacity 0.5s ease 0.35s, transform 0.5s ease 0.35s;
-}
-#brand-dynamics.show { opacity:1; transform:translateX(0); }
 
 #brand-tagline {
-  font-family:'Rajdhani', sans-serif;
-  font-weight:300;
-  font-size:clamp(8px,1.1vw,12px);
-  letter-spacing:0.5em;
-  color:var(--red);
-  text-shadow:0 0 10px var(--red);
-  opacity:0;
-  transition:opacity 0.6s ease 0.55s;
-  text-transform:uppercase;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  font-size: clamp(9px, 1.2vw, 13px);
+  letter-spacing: .5em;
+  color: var(--red);
+  text-shadow: 0 0 10px var(--red);
+  opacity: 0;
+  transition: opacity 0.6s ease 0.4s;
+  text-transform: uppercase;
 }
-#brand-tagline.show { opacity:1; }
+#brand-tagline.show { opacity: 1; }
 
 /* ── SCENES ── */
 .scene {
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  opacity:0;
-  pointer-events:none;
-  z-index:5;
-  transition:opacity 1s ease;
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  z-index: 5;
+  transition: opacity 1s ease;
 }
-.scene.show { opacity:1; }
+.scene.show { opacity: 1; }
 
 /* ── MISSILE SCENE ── */
 #missile-inner {
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:16px;
-  opacity:0;
-  transform:scale(0.97);
-  transition:opacity 1s ease, transform 1s ease;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 14px;
+  opacity: 0; transform: scale(0.97);
+  transition: opacity 1s ease, transform 1s ease;
 }
-#missile-inner.show { opacity:1; transform:scale(1); }
+#missile-inner.show { opacity: 1; transform: scale(1); }
 
 #missile-label {
-  font-size:clamp(8px,1.1vw,11px);
-  letter-spacing:8px;
-  color:var(--cyan);
-  text-shadow:0 0 10px var(--cyan);
-  font-family:'Rajdhani', sans-serif;
-  font-weight:600;
+  font-size: clamp(8px, 1.1vw, 11px);
+  letter-spacing: 8px;
+  color: var(--cyan);
+  text-shadow: 0 0 10px var(--cyan);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
 }
 
 #missile-frame {
-  position:relative;
-  width:clamp(260px,50vw,700px);
-  height:clamp(180px,36vh,460px);
-  border:1px solid #1a004a;
-  background:#02000a;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
+  position: relative;
+  width: clamp(280px, 54vw, 740px);
+  height: clamp(200px, 38vh, 480px);
+  border: 1px solid #1a004a;
+  background: #000;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
 }
 #missile-frame::before {
-  content:''; position:absolute; top:-1px; left:-1px;
-  width:28px; height:28px;
-  border-top:2px solid var(--cyan); border-left:2px solid var(--cyan);
-  box-shadow:0 0 12px var(--cyan);
+  content: ''; position: absolute; top: -1px; left: -1px;
+  width: 28px; height: 28px;
+  border-top: 2px solid var(--cyan); border-left: 2px solid var(--cyan);
+  box-shadow: 0 0 12px var(--cyan); z-index: 2;
 }
 #missile-frame::after {
-  content:''; position:absolute; bottom:-1px; right:-1px;
-  width:28px; height:28px;
-  border-bottom:2px solid var(--fuchsia); border-right:2px solid var(--fuchsia);
-  box-shadow:0 0 12px var(--fuchsia);
+  content: ''; position: absolute; bottom: -1px; right: -1px;
+  width: 28px; height: 28px;
+  border-bottom: 2px solid var(--fuchsia); border-right: 2px solid var(--fuchsia);
+  box-shadow: 0 0 12px var(--fuchsia); z-index: 2;
 }
 
-/* Missile canvas fills the frame */
-#missile-canvas {
-  width:100%; height:100%;
+#missile-video {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  background: #000;
 }
 
-/* Drop-in video override — uncomment when you have the export */
-
-#missile-frame video {
-  position:absolute; inset:0;
-  width:100%; height:100%;
-  object-fit:contain;
+/* HUD corner labels */
+.hud-tl, .hud-tr, .hud-bl, .hud-br {
+  position: absolute;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 9px; letter-spacing: .12em;
+  color: var(--cyan); opacity: .55; z-index: 3;
 }
-
+.hud-tl { top: 8px; left: 36px; }
+.hud-tr { top: 8px; right: 36px; text-align: right; }
+.hud-bl { bottom: 8px; left: 36px; }
+.hud-br { bottom: 8px; right: 36px; text-align: right; }
 
 #missile-specs {
-  display:flex; align-items:center; gap:14px;
-  font-size:clamp(7px,0.9vw,9px); letter-spacing:3px;
-  font-family:'Rajdhani', sans-serif; font-weight:600;
+  display: flex; align-items: center; gap: 14px;
+  font-size: clamp(7px, .9vw, 9px); letter-spacing: 3px;
+  font-family: 'Rajdhani', sans-serif; font-weight: 600;
 }
-.spec { color:#555; }
-.spec em { font-style:normal; color:var(--cyan); margin-left:6px; }
-.sdiv { color:#1a004a; }
+.spec { color: #555; }
+.spec em { font-style: normal; color: var(--cyan); margin-left: 6px; }
+.sdiv { color: #1a004a; }
 
 /* ── END CARD ── */
 #end-inner {
-  display:flex; flex-direction:column;
-  align-items:center; gap:12px;
-  opacity:0; transition:opacity 1.4s ease;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 14px;
+  opacity: 0; transition: opacity 1.4s ease;
 }
-#end-inner.show { opacity:1; }
+#end-inner.show { opacity: 1; }
 
-#end-xtra {
-  font-size:clamp(80px,20vw,220px);
-  font-weight:900; line-height:1;
-  letter-spacing:0.04em;
-}
-#ex  { color:var(--cyan);    text-shadow:0 0 20px var(--cyan),  0 0 60px var(--cyan);    }
-#etra{ color:var(--white);   text-shadow:0 0 8px var(--vpale), 0 0 24px var(--violet);  }
-#end-dynamics {
-  font-size:clamp(8px,1.4vw,16px);
-  letter-spacing:clamp(6px,1.6vw,18px);
-  color:var(--white);
-  text-shadow:0 0 8px var(--violet);
-  font-weight:900;
+#end-logo-img {
+  width: clamp(220px, 34vw, 460px);
+  height: auto;
+  filter: drop-shadow(0 0 28px rgba(30,110,255,.7))
+          drop-shadow(0 0 8px rgba(0,255,255,.4));
 }
 #end-credit {
-  font-size:clamp(6px,0.8vw,9px); letter-spacing:3px; color:#f8f4f4;
-  font-family:'Rajdhani', sans-serif; font-weight:300;
+  font-size: clamp(6px, .8vw, 9px);
+  letter-spacing: 3px; color: #333;
+  font-family: 'Rajdhani', sans-serif; font-weight: 300;
 }
-
-/* scan line over whole page */
-#scan-overlay {
-  position:fixed; inset:0;
-  background:repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0,255,255,0.015) 2px,
-    rgba(0,255,255,0.015) 4px
-  );
-  pointer-events:none;
-  z-index:100;
-  animation:scanmove 8s linear infinite;
-}
-@keyframes scanmove {
-  0%  { background-position:0 0; }
-  100%{ background-position:0 100px; }
-}
-  </style>
+</style>
 </head>
 <body>
 
-<div id="cursor"></div>
-<div id="cursor-ring"></div>
 <div id="scan-overlay"></div>
 
 <div id="stage">
-
   <canvas id="venom-canvas"></canvas>
-  <canvas id="logo-canvas"></canvas>
 
   <!-- INTRO BRAND -->
   <div id="brand-unit">
-    <div id="brand-xtra">
-      <span class="x-letter">X</span><span class="tra-letter">TRA</span>
-    </div>
-    <div id="brand-dynamics">DYNAMICS</div>
-    <div id="brand-tagline">Precision Engineering</div>
+    <!-- Drop your logo PNG into assets/ as logo.png -->
+    <img id="logo-img" src="assets/logo.png" alt="XTRA DYNAMICS"/>
+    <div id="brand-tagline">Precision Engineereing</div>
   </div>
 
   <!-- MISSILE SCENE -->
   <div class="scene" id="scene-missile">
     <div id="missile-inner">
-      <div id="missile-label">PROTOTYPE — XTRA MK·I</div>
+      <div id="missile-label">PROTOTYPE — XTRA IO VANGAURD</div>
       <div id="missile-frame">
-        <canvas id="missile-canvas"></canvas>
-        
-          <video src="assets/video/0001-0239.mp4" autoplay muted loop playsinline></video>
-        
+        <div class="hud-tl">SYS·ONLINE</div>
+        <div class="hud-tr">STATUS·NOMINAL</div>
+        <div class="hud-bl">XTRA·VANGAURD // CLASSIFIED</div>
+        <div class="hud-br">CEP·0.8m // MACH·4.2</div>
+        <!-- Drop your missile video into assets/ as missile.mp4 -->
+        <video id="missile-video" autoplay muted loop playsinline>
+          <source src="assets/ ideo/missile.mp4" type="video/mp4"/>
+        </video>
       </div>
       <div id="missile-specs">
-        <span class="spec">DESIGNATION <em>XTRA-MK1</em></span>
+        <span class="spec">DESIGNATION <em>XTRA-10-VANGAURD</em></span>
         <span class="sdiv">|</span>
         <span class="spec">CLASS <em>PROTOTYPE</em></span>
         <span class="sdiv">|</span>
@@ -319,38 +227,22 @@ html, body {
   <!-- END CARD -->
   <div class="scene" id="scene-end">
     <div id="end-inner">
-      <div id="end-xtra"><span id="ex">X</span><span id="etra">TRA</span></div>
-      <div id="end-dynamics">DYNAMICS</div>
+      <img id="end-logo-img" src="assets/logo.png" alt="XTRA DYNAMICS"/>
       <div id="end-credit">© REKOILE MEDIA PRODUCTIONS · ALL RIGHTS RESERVED</div>
     </div>
   </div>
-
 </div>
 
 <script>
-/* ════════════════════════════════════════════════
-   XTRA DYNAMICS  —  ad.js  (v5, self-contained)
-   ════════════════════════════════════════════════ */
-
-/* ── CURSOR ── */
-const cur = document.getElementById('cursor');
-const ring = document.getElementById('cursor-ring');
-document.addEventListener('mousemove', e => {
-  cur.style.left  = e.clientX + 'px';
-  cur.style.top   = e.clientY + 'px';
-  ring.style.left = e.clientX + 'px';
-  ring.style.top  = e.clientY + 'px';
-});
-
-/* ── VENOM TENDRILS (particle web) ── */
-(function venomInit() {
+/* ── VENOM TENDRILS ── */
+(function () {
   const vc  = document.getElementById('venom-canvas');
   const ctx = vc.getContext('2d');
   let W, H;
 
-  const COLORS = ['#9D00FF','#FF00FF','#00FFFF','#5be0ff','#FF2255'];
+  const COLORS = ['#9D00FF','#FF00FF','#00FFFF','#1E6EFF','#FF2255'];
   const N = 90;
-  let nodes = [];
+  const nodes = [];
 
   function resize() {
     W = vc.width  = window.innerWidth;
@@ -368,37 +260,37 @@ document.addEventListener('mousemove', e => {
       this.vy = (Math.random() - 0.5) * 0.5;
       this.r  = Math.random() * 1.5 + 0.4;
       this.c  = COLORS[Math.floor(Math.random() * COLORS.length)];
-      this.life = 0;
+      this.life    = 0;
       this.maxLife = 300 + Math.random() * 400;
     }
     update() {
       this.x += this.vx; this.y += this.vy; this.life++;
       if (this.life > this.maxLife ||
-          this.x < -20 || this.x > W+20 ||
-          this.y < -20 || this.y > H+20) this.reset();
+          this.x < -20 || this.x > W + 20 ||
+          this.y < -20 || this.y > H + 20) this.reset();
     }
   }
 
   for (let i = 0; i < N; i++) nodes.push(new Node());
 
-  function venomDraw() {
+  function draw() {
     ctx.clearRect(0, 0, W, H);
     for (const n of nodes) n.update();
 
-    const DIST = 140;
+    const D = 140;
     for (let i = 0; i < N; i++) {
-      for (let j = i+1; j < N; j++) {
+      for (let j = i + 1; j < N; j++) {
         const dx = nodes[i].x - nodes[j].x;
         const dy = nodes[i].y - nodes[j].y;
-        const d  = Math.sqrt(dx*dx + dy*dy);
-        if (d < DIST) {
-          const alpha = (1 - d/DIST) * 0.35;
+        const d  = Math.sqrt(dx * dx + dy * dy);
+        if (d < D) {
+          const a = (1 - d / D) * 0.35;
           ctx.save();
-          ctx.globalAlpha = alpha;
-          ctx.strokeStyle = nodes[i].c;
-          ctx.lineWidth   = 0.6;
-          ctx.shadowColor = nodes[i].c;
-          ctx.shadowBlur  = 4;
+          ctx.globalAlpha  = a;
+          ctx.strokeStyle  = nodes[i].c;
+          ctx.lineWidth    = 0.6;
+          ctx.shadowColor  = nodes[i].c;
+          ctx.shadowBlur   = 4;
           ctx.beginPath();
           ctx.moveTo(nodes[i].x, nodes[i].y);
           ctx.lineTo(nodes[j].x, nodes[j].y);
@@ -408,388 +300,89 @@ document.addEventListener('mousemove', e => {
       }
       ctx.save();
       ctx.globalAlpha = 0.7;
-      ctx.fillStyle = nodes[i].c;
+      ctx.fillStyle   = nodes[i].c;
       ctx.shadowColor = nodes[i].c;
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur  = 8;
       ctx.beginPath();
-      ctx.arc(nodes[i].x, nodes[i].y, nodes[i].r, 0, Math.PI*2);
+      ctx.arc(nodes[i].x, nodes[i].y, nodes[i].r, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
-    requestAnimationFrame(venomDraw);
+    requestAnimationFrame(draw);
   }
-  venomDraw();
-})();
-
-/* ── LOGO SLASH STROKES ── */
-(function logoInit() {
-  const lc  = document.getElementById('logo-canvas');
-  const ctx = lc.getContext('2d');
-  let W, H;
-  let strokes = [];
-  let active = false;
-
-  function resize() {
-    W = lc.width  = window.innerWidth;
-    H = lc.height = window.innerHeight;
-  }
-  window.addEventListener('resize', resize);
-  resize();
-
-  // Each stroke: a diagonal slash across the canvas
-  function createStrokes() {
-    const cx = W/2, cy = H/2;
-    const hw = Math.min(W, H) * 0.32;
-
-    strokes = [
-      // X left-down stroke
-      { x1:cx - hw*0.6, y1:cy - hw*0.85,
-        x2:cx + hw*0.6, y2:cy + hw*0.85,
-        color:'#00FFFF', progress:0, width:3 },
-      // X right-down stroke
-      { x1:cx + hw*0.6, y1:cy - hw*0.85,
-        x2:cx - hw*0.6, y2:cy + hw*0.85,
-        color:'#FF00FF', progress:0, width:3 },
-    ];
-  }
-
-  function drawStrokes(t) {
-    if (!active) return;
-    ctx.clearRect(0, 0, W, H);
-
-    for (const s of strokes) {
-      if (s.progress >= 1) continue;
-      s.progress = Math.min(1, s.progress + 0.04);
-      const ex = s.x1 + (s.x2 - s.x1) * s.progress;
-      const ey = s.y1 + (s.y2 - s.y1) * s.progress;
-
-      ctx.save();
-      ctx.globalAlpha = 0.22;
-      ctx.strokeStyle = s.color;
-      ctx.lineWidth   = s.width;
-      ctx.shadowColor = s.color;
-      ctx.shadowBlur  = 18;
-      ctx.lineCap     = 'round';
-      ctx.beginPath();
-      ctx.moveTo(s.x1, s.y1);
-      ctx.lineTo(ex, ey);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    if (strokes.some(s => s.progress < 1)) {
-      requestAnimationFrame(drawStrokes);
-    } else {
-      // fade out after full draw
-      setTimeout(() => {
-        ctx.clearRect(0, 0, W, H);
-        active = false;
-      }, 800);
-    }
-  }
-
-  // expose trigger
-  window.triggerLogoSlash = function() {
-    active = true;
-    createStrokes();
-    requestAnimationFrame(drawStrokes);
-  };
-})();
-
-/* ── WIREFRAME MISSILE CANVAS ── */
-(function missileInit() {
-  const mc  = document.getElementById('missile-canvas');
-  if (!mc) return;
-  const ctx = mc.getContext('2d');
-  let W, H, raf;
-  let angle = 0;
-
-  function resize() {
-    const frame = mc.parentElement;
-    W = mc.width  = frame.clientWidth;
-    H = mc.height = frame.clientHeight;
-  }
-  window.addEventListener('resize', resize);
-  resize();
-
-  // ── Ellipse helpers that respond to rotation ──
-  // We simulate a simple slow Y-axis rotation by skewing x positions
-  function ellipseX(cx, rx, a) {
-    // rx scaled by cos(angle) for rotation illusion
-    return { cx, rx: rx * Math.abs(Math.cos(a)), ry: rx * 0.22 };
-  }
-
-  function drawMissile(a) {
-    ctx.clearRect(0, 0, W, H);
-
-    const cx   = W / 2;
-    const base = H * 0.88;
-    const top  = H * 0.05;
-    const totalH = base - top;
-
-    // Body proportions (0..1 of totalH from top)
-    const noseTip   = top;
-    const noseBase  = top + totalH * 0.18;
-    const bodyTop   = noseBase;
-    const midTop    = top + totalH * 0.28;
-    const midBot    = top + totalH * 0.48;
-    const bodyBot   = top + totalH * 0.75;
-    const finTop    = top + totalH * 0.72;
-    const finBot    = top + totalH * 0.88;
-    const nozzleBot = base;
-
-    const BR = W * 0.11;   // body radius
-    const NR = W * 0.05;   // nose tip radius
-    const cos = Math.cos(a);
-
-    // ── BLUE WIREFRAME (body) ──
-    ctx.save();
-    ctx.shadowColor = '#5be0ff';
-    ctx.shadowBlur  = 10;
-    ctx.strokeStyle = '#5be0ff';
-    ctx.lineWidth   = 1.1;
-    ctx.globalAlpha = 0.92;
-
-    function ellipseH(y, rx) {
-      ctx.beginPath();
-      ctx.ellipse(cx, y, rx * Math.abs(cos) || 1, rx * 0.22, 0, 0, Math.PI*2);
-      ctx.stroke();
-    }
-    function vLine(offR, y1, y2) {
-      // offset on body surface
-      const ox = offR * cos;
-      ctx.beginPath();
-      ctx.moveTo(cx + ox, y1);
-      ctx.lineTo(cx + ox, y2);
-      ctx.stroke();
-    }
-
-    // Nose cone silhouette
-    ctx.beginPath();
-    ctx.moveTo(cx, noseTip);
-    ctx.lineTo(cx - BR * Math.abs(cos), noseBase);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(cx, noseTip);
-    ctx.lineTo(cx + BR * Math.abs(cos), noseBase);
-    ctx.stroke();
-
-    // Nose horizontal slices
-    const nsSlices = 5;
-    for (let i = 1; i <= nsSlices; i++) {
-      const t  = i / nsSlices;
-      const y  = noseTip + (noseBase - noseTip) * t;
-      const rx = BR * t;
-      ellipseH(y, rx);
-    }
-
-    // Body rings
-    const ringYs = [];
-    const bodyRings = 10;
-    for (let i = 0; i <= bodyRings; i++) {
-      const y = bodyTop + (bodyBot - bodyTop) * i / bodyRings;
-      ringYs.push(y);
-      ellipseH(y, BR);
-    }
-
-    // Body vertical lines
-    for (const ox of [-1, -0.5, 0, 0.5, 1]) {
-      vLine(BR * ox, bodyTop, bodyBot);
-    }
-
-    // Lower body / nozzle collar
-    const nozzleR = BR * 0.75;
-    ellipseH(bodyBot + (nozzleBot - bodyBot) * 0.5, BR * 0.88);
-    ellipseH(nozzleBot, nozzleR);
-    ctx.beginPath();
-    ctx.moveTo(cx - BR * Math.abs(cos), bodyBot);
-    ctx.lineTo(cx - nozzleR * Math.abs(cos), nozzleBot);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(cx + BR * Math.abs(cos), bodyBot);
-    ctx.lineTo(cx + nozzleR * Math.abs(cos), nozzleBot);
-    ctx.stroke();
-    vLine(0, bodyBot, nozzleBot);
-
-    ctx.restore();
-
-    // ── RED WIREFRAME (mid band + fins) ──
-    ctx.save();
-    ctx.shadowColor = '#FF2255';
-    ctx.shadowBlur  = 10;
-    ctx.strokeStyle = '#FF2255';
-    ctx.lineWidth   = 1.2;
-    ctx.globalAlpha = 0.9;
-
-    function ellipseR(y, rx) {
-      ctx.beginPath();
-      ctx.ellipse(cx, y, rx * Math.abs(cos) || 1, rx * 0.22, 0, 0, Math.PI*2);
-      ctx.stroke();
-    }
-
-    // Mid band rings
-    const midRings = 4;
-    for (let i = 0; i <= midRings; i++) {
-      const y = midTop + (midBot - midTop) * i / midRings;
-      ellipseR(y, BR + 2);
-    }
-    // Mid band verticals
-    for (const ox of [-1, -0.5, 0, 0.5, 1]) {
-      const x = cx + (BR + 2) * ox * cos;
-      ctx.beginPath();
-      ctx.moveTo(x, midTop);
-      ctx.lineTo(x, midBot);
-      ctx.stroke();
-    }
-
-    // Fins — two visible fins left/right
-    // Fin geometry: triangle from body out and down
-    const finW = BR * 1.0;
-    const leftBase  = cx - BR * Math.abs(cos);
-    const rightBase = cx + BR * Math.abs(cos);
-
-    // Left fin
-    const lf = [
-      [leftBase, finTop],
-      [leftBase - finW * Math.abs(cos), finBot],
-      [leftBase, finBot],
-    ];
-    ctx.beginPath();
-    ctx.moveTo(...lf[0]); ctx.lineTo(...lf[1]); ctx.lineTo(...lf[2]); ctx.closePath();
-    ctx.stroke();
-    // internal fin lines
-    for (let i = 1; i <= 3; i++) {
-      const t = i/4;
-      ctx.beginPath();
-      ctx.moveTo(lf[0][0] * (1-t) + lf[1][0]*t, lf[0][1]*(1-t)+lf[1][1]*t);
-      ctx.lineTo(lf[2][0], lf[0][1]*(1-t)+lf[1][1]*t);
-      ctx.stroke();
-    }
-
-    // Right fin (mirror)
-    const rf = [
-      [rightBase, finTop],
-      [rightBase + finW * Math.abs(cos), finBot],
-      [rightBase, finBot],
-    ];
-    ctx.beginPath();
-    ctx.moveTo(...rf[0]); ctx.lineTo(...rf[1]); ctx.lineTo(...rf[2]); ctx.closePath();
-    ctx.stroke();
-    for (let i = 1; i <= 3; i++) {
-      const t = i/4;
-      ctx.beginPath();
-      ctx.moveTo(rf[0][0]*(1-t)+rf[1][0]*t, rf[0][1]*(1-t)+rf[1][1]*t);
-      ctx.lineTo(rf[2][0], rf[0][1]*(1-t)+rf[1][1]*t);
-      ctx.stroke();
-    }
-
-    // Fin band rings
-    ellipseR(finTop, BR + 1);
-    ellipseR(finBot, BR + 1);
-
-    ctx.restore();
-
-    // ── SCAN LINE ──
-    const scanY = noseTip + ((Date.now() * 0.0004) % 1) * (nozzleBot - noseTip);
-    ctx.save();
-    const grad = ctx.createLinearGradient(cx - BR, scanY, cx + BR, scanY);
-    grad.addColorStop(0, 'transparent');
-    grad.addColorStop(0.5, 'rgba(255,255,255,0.7)');
-    grad.addColorStop(1, 'transparent');
-    ctx.strokeStyle = grad;
-    ctx.lineWidth   = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(cx - BR, scanY);
-    ctx.lineTo(cx + BR, scanY);
-    ctx.stroke();
-    ctx.restore();
-
-    // ── GLOW pulse ──
-    const gAlpha = 0.06 + 0.03 * Math.sin(Date.now() * 0.002);
-    const grd = ctx.createRadialGradient(cx, H*0.5, 0, cx, H*0.5, BR*2.5);
-    grd.addColorStop(0, `rgba(91,224,255,${gAlpha})`);
-    grd.addColorStop(1, 'transparent');
-    ctx.fillStyle = grd;
-    ctx.beginPath();
-    ctx.ellipse(cx, H*0.5, BR*2.5, H*0.38, 0, 0, Math.PI*2);
-    ctx.fill();
-  }
-
-  let running = false;
-  window.startMissileRender = function() {
-    if (running) return;
-    running = true;
-    function loop() {
-      angle += 0.007;
-      drawMissile(angle);
-      raf = requestAnimationFrame(loop);
-    }
-    loop();
-  };
-  window.stopMissileRender = function() {
-    running = false;
-    cancelAnimationFrame(raf);
-  };
+  draw();
 })();
 
 /* ── SEQUENCER ── */
-(function seq() {
-  const brandUnit     = document.getElementById('brand-unit');
-  const brandXtra     = document.getElementById('brand-xtra');
-  const brandDynamics = document.getElementById('brand-dynamics');
-  const brandTagline  = document.getElementById('brand-tagline');
-  const sceneMissile  = document.getElementById('scene-missile');
-  const missileInner  = document.getElementById('missile-inner');
-  const sceneEnd      = document.getElementById('scene-end');
-  const endInner      = document.getElementById('end-inner');
+(function () {
+  const brandUnit  = document.getElementById('brand-unit');
+  const logoImg    = document.getElementById('logo-img');
+  const tagline    = document.getElementById('brand-tagline');
+  const sceneMiss  = document.getElementById('scene-missile');
+  const missInner  = document.getElementById('missile-inner');
+  const sceneEnd   = document.getElementById('scene-end');
+  const endInner   = document.getElementById('end-inner');
 
-  function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+  const delay = ms => new Promise(r => setTimeout(r, ms));
 
   async function run() {
-    // — INTRO: brand slash in —
+    // ── INTRO ──
     await delay(400);
     brandUnit.classList.add('show');
-    window.triggerLogoSlash();
 
-    await delay(200);
-    brandXtra.classList.add('slash-in');
+    await delay(150);
+    logoImg.classList.add('show');
 
-    await delay(300);
-    brandDynamics.classList.add('show');
+    await delay(350);
+    tagline.classList.add('show');
 
-    await delay(400);
-    brandTagline.classList.add('show');
+    // hold brand
+    await delay(2400);
 
-    // — hold brand —
-    await delay(2200);
-
-    // — TRANSITION to missile —
+    // ── TRANSITION → MISSILE ──
     brandUnit.style.transition = 'opacity 0.6s ease';
     brandUnit.style.opacity    = '0';
-
     await delay(700);
-    brandUnit.style.pointerEvents = 'none';
 
-    sceneMissile.classList.add('show');
-    await delay(200);
-    missileInner.classList.add('show');
-    window.startMissileRender();
+    sceneMiss.classList.add('show');
+    await delay(150);
+    missInner.classList.add('show');
 
-    // — hold missile scene —
-    await delay(5000);
+    // hold missile
+    await delay(5500);
 
-    // — TRANSITION to end card —
-    sceneMissile.style.transition = 'opacity 0.8s ease';
-    sceneMissile.style.opacity    = '0';
-    window.stopMissileRender();
-
+    // ── TRANSITION → END CARD ──
+    sceneMiss.style.transition = 'opacity 0.8s ease';
+    sceneMiss.style.opacity    = '0';
     await delay(900);
+
     sceneEnd.classList.add('show');
     endInner.classList.add('show');
 
-    // — loop after hold —
+    // hold end card
     await delay(4000);
-    location.reload();   // remove if you want it to hold indefinitely
+
+    // ── RESET & LOOP ──
+    sceneEnd.style.transition = 'opacity 0.6s ease';
+    sceneEnd.style.opacity    = '0';
+    await delay(700);
+
+    // hard reset
+    brandUnit.removeAttribute('style');
+    brandUnit.classList.remove('show');
+    logoImg.classList.remove('show');
+    tagline.classList.remove('show');
+
+    sceneMiss.removeAttribute('style');
+    sceneMiss.classList.remove('show');
+    missInner.classList.remove('show');
+
+    sceneEnd.removeAttribute('style');
+    sceneEnd.classList.remove('show');
+    endInner.classList.remove('show');
+
+    await delay(200);
+    run();
   }
 
   run();
