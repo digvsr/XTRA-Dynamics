@@ -23,7 +23,6 @@ html, body {
   overflow: hidden;
   background: #000;
   font-family: 'Orbitron', monospace;
-  /* default system cursor */
 }
 
 /* ── STAGE ── */
@@ -57,12 +56,12 @@ html, body {
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   z-index: 2; pointer-events: none;
-  opacity: 0; gap: 10px;
+  opacity: 0; gap: 4px; /* FIX: tightened gap from 10px to 4px */
 }
 #brand-unit.show { opacity: 1; transition: opacity 0.8s ease; }
 
 #logo-img {
-  width: clamp(240px, 38vw, 520px);
+  width: clamp(200px, 32vw, 440px); /* FIX: slightly smaller to sit closer to tagline */
   height: auto;
   opacity: 0;
   transform: translateY(22px);
@@ -78,13 +77,14 @@ html, body {
 #brand-tagline {
   font-family: 'Rajdhani', sans-serif;
   font-weight: 600;
-  font-size: clamp(9px, 1.2vw, 13px);
-  letter-spacing: .5em;
+  font-size: clamp(8px, 1vw, 11px); /* FIX: slightly smaller so it sits snug under logo */
+  letter-spacing: .45em;
   color: var(--red);
   text-shadow: 0 0 10px var(--red);
   opacity: 0;
   transition: opacity 0.6s ease 0.4s;
   text-transform: uppercase;
+  margin-top: 2px; /* FIX: minimal gap */
 }
 #brand-tagline.show { opacity: 1; }
 
@@ -124,24 +124,15 @@ html, body {
   background: #000;
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
-}
-#missile-frame::before {
-  content: ''; position: absolute; top: -1px; left: -1px;
-  width: 28px; height: 28px;
-  border-top: 2px solid var(--cyan); border-left: 2px solid var(--cyan);
-  box-shadow: 0 0 12px var(--cyan); z-index: 2;
-}
-#missile-frame::after {
-  content: ''; position: absolute; bottom: -1px; right: -1px;
-  width: 28px; height: 28px;
-  border-bottom: 2px solid var(--fuchsia); border-right: 2px solid var(--fuchsia);
-  box-shadow: 0 0 12px var(--fuchsia); z-index: 2;
+  /* FIX: removed ::before and ::after corner box pseudo-elements */
 }
 
 #missile-video {
   width: 100%; height: 100%;
   object-fit: contain;
   background: #000;
+  /* FIX: boost brightness so video pops */
+  filter: brightness(1.6) contrast(1.1) saturate(1.2);
 }
 
 /* HUD corner labels */
@@ -180,9 +171,11 @@ html, body {
           drop-shadow(0 0 8px rgba(0,255,255,.4));
 }
 #end-credit {
-  font-size: clamp(6px, .8vw, 9px);
-  letter-spacing: 3px; color: #333;
-  font-family: 'Rajdhani', sans-serif; font-weight: 300;
+  font-size: clamp(8px, .9vw, 11px); /* FIX: slightly larger */
+  letter-spacing: 3px;
+  color: #aaa; /* FIX: was #333 (invisible on black) — now readable */
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 300;
 }
 </style>
 </head>
@@ -195,9 +188,8 @@ html, body {
 
   <!-- INTRO BRAND -->
   <div id="brand-unit">
-    <!-- Drop your logo PNG into assets/ as logo.png -->
     <img id="logo-img" src="assets/images/logo.png" alt="XTRA DYNAMICS"/>
-    <div id="brand-tagline">Precision Engineereing</div>
+    <div id="brand-tagline">Precision Engineering</div>
   </div>
 
   <!-- MISSILE SCENE -->
@@ -209,7 +201,6 @@ html, body {
         <div class="hud-tr">STATUS·NOMINAL</div>
         <div class="hud-bl">XTRA·VANGAURD // CLASSIFIED</div>
         <div class="hud-br">CEP·0.8m // MACH·4.2</div>
-        <!-- Drop your missile video into assets/ as missile.mp4 -->
         <video id="missile-video" autoplay muted loop playsinline>
           <source src="assets/video/missile.mp4" type="video/mp4"/>
         </video>
@@ -326,7 +317,6 @@ html, body {
   const delay = ms => new Promise(r => setTimeout(r, ms));
 
   async function run() {
-    // ── INTRO ──
     await delay(400);
     brandUnit.classList.add('show');
 
@@ -336,10 +326,8 @@ html, body {
     await delay(350);
     tagline.classList.add('show');
 
-    // hold brand
     await delay(2400);
 
-    // ── TRANSITION → MISSILE ──
     brandUnit.style.transition = 'opacity 0.6s ease';
     brandUnit.style.opacity    = '0';
     await delay(700);
@@ -348,10 +336,8 @@ html, body {
     await delay(150);
     missInner.classList.add('show');
 
-    // hold missile
     await delay(5500);
 
-    // ── TRANSITION → END CARD ──
     sceneMiss.style.transition = 'opacity 0.8s ease';
     sceneMiss.style.opacity    = '0';
     await delay(900);
@@ -359,15 +345,12 @@ html, body {
     sceneEnd.classList.add('show');
     endInner.classList.add('show');
 
-    // hold end card
     await delay(4000);
 
-    // ── RESET & LOOP ──
     sceneEnd.style.transition = 'opacity 0.6s ease';
     sceneEnd.style.opacity    = '0';
     await delay(700);
 
-    // hard reset
     brandUnit.removeAttribute('style');
     brandUnit.classList.remove('show');
     logoImg.classList.remove('show');
