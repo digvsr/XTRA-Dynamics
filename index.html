@@ -231,7 +231,7 @@ html, body {
   const ctx = vc.getContext('2d');
   let W, H;
 
-  const COLORS = ['#9D00FF','#FF00FF','#00FFFF','#1E6EFF','#FF2255'];
+  const COLORS = ['#FF0022','#FF2255','#CC0011','#FF6680','#990000','#FF3300','#800010','#FF4455'];
   const N = 90;
   const nodes = [];
 
@@ -304,8 +304,30 @@ html, body {
   draw();
 })();
 
-/* ── SEQUENCER ── */
+/* ── ACTIVITY + INACTIVITY LOGIC ── */
 (function () {
+  const INACTIVITY_LIMIT = 3 * 60 * 1000; // 3 minutes
+  let isActive = false;
+  let inactivityTimer = null;
+
+  // Reset the 3-minute inactivity countdown on any user event
+  function onActivity() {
+    isActive = true;
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+      isActive = false;
+      location.reload();
+    }, INACTIVITY_LIMIT);
+  }
+
+  ['mousemove','mousedown','keydown','touchstart','scroll','click'].forEach(e =>
+    window.addEventListener(e, onActivity, { passive: true })
+  );
+
+  // Start the timer immediately (so idle visitors get a reload too)
+  onActivity();
+
+  /* ── SEQUENCER ── */
   const brandUnit  = document.getElementById('brand-unit');
   const logoImg    = document.getElementById('logo-img');
   const tagline    = document.getElementById('brand-tagline');
@@ -314,20 +336,35 @@ html, body {
   const sceneEnd   = document.getElementById('scene-end');
   const endInner   = document.getElementById('end-inner');
 
+  let sequencerStopped = false;
+
   const delay = ms => new Promise(r => setTimeout(r, ms));
 
+  // Interruptible delay — resolves early if sequencer should stop
+  function delayOrStop(ms) {
+    return new Promise(r => {
+      const t = setTimeout(r, ms);
+      const check = setInterval(() => {
+        if (sequencerStopped) { clearTimeout(t); clearInterval(check); r(); }
+      }, 100);
+      setTimeout(() => clearInterval(check), ms + 200);
+    });
+  }
+
   async function run() {
+    sequencerStopped = false;
+
+    // ── INTRO ──
     await delay(400);
     brandUnit.classList.add('show');
-
     await delay(150);
     logoImg.classList.add('show');
-
     await delay(350);
     tagline.classList.add('show');
+    await delayOrStop(2400);
+    if (sequencerStopped) return;
 
-    await delay(2400);
-
+    // ── TRANSITION → MISSILE ──
     brandUnit.style.transition = 'opacity 0.6s ease';
     brandUnit.style.opacity    = '0';
     await delay(700);
@@ -336,17 +373,44 @@ html, body {
     await delay(150);
     missInner.classList.add('show');
 
-    await delay(5500);
+    // Hold missile scene — but if user is active, stay here indefinitely
+    await new Promise(r => {
+      const t = setTimeout(r, 5500);
+      const check = setInterval(() => {
+        if (isActive) {
+          // User is active: keep extending — check again every 500ms
+        } else {
+          // User went inactive: let the normal sequence continue
+          clearTimeout(t);
+          clearInterval(check);
+          r();
+        }
+      }, 500);
+      // Also resolve after 5.5s if never active
+      setTimeout(() => { clearInterval(check); r(); }, 5500);
+    });
 
+    // Wait until user is fully inactive before moving on
+    await new Promise(r => {
+      if (!isActive) { r(); return; }
+      const check = setInterval(() => {
+        if (!isActive) { clearInterval(check); r(); }
+      }, 500);
+    });
+
+    if (sequencerStopped) return;
+
+    // ── TRANSITION → END CARD ──
     sceneMiss.style.transition = 'opacity 0.8s ease';
     sceneMiss.style.opacity    = '0';
     await delay(900);
 
     sceneEnd.classList.add('show');
     endInner.classList.add('show');
+    await delayOrStop(4000);
+    if (sequencerStopped) return;
 
-    await delay(4000);
-
+    // ── FADE OUT & LOOP ──
     sceneEnd.style.transition = 'opacity 0.6s ease';
     sceneEnd.style.opacity    = '0';
     await delay(700);
